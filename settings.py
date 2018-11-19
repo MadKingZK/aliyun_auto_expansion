@@ -6,7 +6,7 @@ ssh_keyfile = '/root/.ssh/id_rsa'
 init_cmd = 'bash /root/auto_init.sh'
 
 check_api = {
-    'xng-php-main': {
+    'php-main': {
         'proto': 'http://',
         'uri': '/tarns/check_api.php',
         'headers': {
@@ -25,7 +25,7 @@ check_api = {
 dry_run = True
 
 ecs_info = {
-    'xng-php-main': {
+    'php-main': {
         # 设置参照ECS模板
         'ecs_model_id': 'o-afefajorrcwsawef',
         # 设置默认安全组，在创建ECS时指定添加
@@ -43,28 +43,28 @@ ecs_info = {
         'slb_vids': ['wefwfwef', 'wefwefwef'],
         'slb_weight': 45,
     },
-    'xng-go': {
+    'go': {
 
     },
-    'xng-op': {
+    'op': {
 
     },
-    'xbd-php': {
+    'php': {
 
     },
-    'xbd-go': {
+    'go': {
 
     },
-    'xbd-op': {
+    'op': {
 
     },
-    'wk-php': {
+    'php': {
 
     },
-    'wk-go': {
+    'w-go': {
 
     },
-    'wk-op': {
+    'w-op': {
 
     },
 }
