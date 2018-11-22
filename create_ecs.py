@@ -15,34 +15,6 @@ RUNNING_STATUS = 'Running'
 CHECK_INTERVAL = 3
 CHECK_TIMEOUT = 180
 
-'''
-ecs_info数据格式
-ecs_info = {'ecs_model_id': '',
-            'default_secrity_group_id': '',
-            'secondry_secrity_group_ids': [''],
-            'instance_types': ['ecs.sn1.3xlarge'],
-            'zone_id': 'cn-shenzhen-a',
-            'ImageId': 'not have',
-            'instance_name': 'php-temp-',
-            'slb_vids': ['', '', '', ''],
-            'slb_weight': 45,
-            'Disks': [
-                {
-                    'DiskId': '',
-                    'Type': 'data',
-                    'Size': 120,
-                    'LastSnapId': ''
-                },
-                {
-                    'DiskId': '',
-                    'Type': 'system',
-                    'Size': 40,
-                    'LastSnapId': ''
-                }
-            ]
-            }
-'''
-
 class AliCreateInstances(object):
 
     def __init__(self, ecs_info, amount):
@@ -83,7 +55,7 @@ class AliCreateInstances(object):
         # 是否开启安全加固
         self.security_enhancement_strategy = 'Active'
         # 实例的资源规格
-        self.instance_type = self.ecs_info.get('instance_types')[0]
+        self.instance_type = self.ecs_info.get('instance_type')
         # 系统盘大小
         self.system_disk_size = '40'
         # 系统盘的磁盘种类
@@ -116,6 +88,10 @@ class AliCreateInstances(object):
             print('Fail. Business error.'
                   ' Code: {code}, Message: {msg}'
                   .format(code=e.error_code, msg=e.message))
+            if e.error_code == 'OperationDenied.NoStock':
+                return 404
+            elif e.error_code == 'DryRunOperation':
+                return 201
         except Exception:
             print('Unhandled error')
             print(traceback.format_exc())

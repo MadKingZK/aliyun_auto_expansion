@@ -14,8 +14,8 @@ check_api = {
             'charset': 'utf-8',
         },
         'data': {
-            "token": "",
-            "somedata": ""
+            "token": "aaaaa",
+            "somedata": "bbbb"
         }
     },
 }
@@ -34,37 +34,37 @@ ecs_info = {
         'secondry_secrity_group_ids': [''],
         # 实例类型（cpu与内存）按优先级排序，在前一个创建失败或者指定返回为缺货后尝试下一个，都尝试完如果失败则报错。
         # 'instance_types': ['ecs.sn1.3xlarge'],
-        'instance_types': ['ecs.n1.tiny'],
+        'instance_types': ['ecs.sn1.3xlarge','ecs.n4.4xlarge'],
         # 设置实例创建所在可用区
         'zone_id': 'cn-shenzhen-a',
         # 设置初始化脚本
-        'init_script': 'php_init.sh',
+        'init_script': '',
         #需要添加到的slb服务器组id
         'slb_vids': ['', ''],
         'slb_weight': 45,
     },
-    'xng-go': {
+    'project1': {
 
     },
-    'xng-op': {
+    'project2': {
 
     },
-    'xbd-php': {
+    'project3': {
 
     },
-    'xbd-go': {
+    'project4': {
 
     },
-    'xbd-op': {
+    'project5': {
 
     },
-    'wk-php': {
+    'project6': {
 
     },
-    'wk-go': {
+    'project7': {
 
     },
-    'wk-op': {
+    'project8': {
 
     },
 }

@@ -23,4 +23,4 @@ def collect_param(ecs_group):
     return ecs_info
 
 if __name__ == '__main__':
-    collect_param('php-main')
+    pass

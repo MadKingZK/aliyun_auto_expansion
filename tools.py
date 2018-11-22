@@ -80,17 +80,33 @@ class AliEcsTools(object):
             return images[0].get('ImageId')
         # 没有，创建新的镜像，检查镜像状态，创建成功后，返回镜像id。
         else:
-            response = self.create_image(snap_id)
-            return response
+            image_id = self.create_image(snap_id)
+            while True:
+                check_result = self.check_image_status(image_id)
+                if not check_result:
+                    print('镜像不存在: {image_id}'.format(image_id=image_id))
+                    exit(1)
+                elif check_result != 'Available':
+                    print("等待镜像状态为：Available")
+                    time.sleep(3)
+                elif check_result == 'Available':
+                    break
+                else:
+                    print('check_image 检查结果异常：image_id'.format(image_id))
+                    exit(1)
+            return image_id
 
     def create_image(self, snap_id):
         # 拿到快照id，检查快照id状态
         request = CreateImageRequest.CreateImageRequest()
+        request.set_accept_format('json')
         request.set_SnapshotId(snap_id)
         request.set_ImageName(
             "auto_expansion_{date_time}".format(date_time=time.strftime('%Y-%m-%d_%H:%M', time.localtime(time.time()))))
         response = self.client.do_action_with_exception(request)
-        print(response)
+        response_dict = json.loads(response)
+
+        return response_dict.get('ImageId')
 
     def add_to_slb(self, svid, instance_ids, weight):
         request = AddVServerGroupBackendServersRequest.AddVServerGroupBackendServersRequest()
@@ -130,6 +146,23 @@ class AliEcsTools(object):
         response = self.client.do_action_with_exception(request)
         response_dict = json.loads(response)
         return response_dict
+
+    def check_image_status(self, image_id):
+        request = DescribeImagesRequest.DescribeImagesRequest()
+        request.set_accept_format('json')
+        request.set_ImageId(image_id)
+        request.set_ImageOwnerAlias('self')
+        request.set_PageNumber(1)
+        request.set_PageSize(10)
+        response = self.client.do_action_with_exception(request)
+        response_dict = json.loads(response)
+        image = response_dict.get('Images').get('Image')[0]
+        if image:
+            status = image.get('Status')
+            return status
+        else:
+            return False
+
 
 class SshTools(object):
     def __init__(self, host):

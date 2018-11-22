@@ -24,8 +24,29 @@ def main():
         exit(4)
     ecs_info = collect_param(arg1)
     arg2 = int(arg2)
+
     #print(ecs_info)
-    instance_ids = AliCreateInstances(ecs_info, arg2).run()
+    instance_types = ecs_info.get('instance_types')
+    instance_ids = None
+    for instance_type in instance_types:
+        ecs_info['instance_type'] = instance_type
+        instance_ids = AliCreateInstances(ecs_info, arg2).run()
+        if isinstance(instance_ids, int):
+            if instance_ids == 404:
+                print('实例已售空，创建下一个实例类型')
+                continue
+            if instance_ids == 201:
+                print('Dry Run 参数检查通过')
+                exit(0)
+        elif isinstance(instance_ids, list):
+            break
+        else:
+            print("创建实例返回的instance_id格式错误：{instance_ids}".format(instance_ids=instance_ids))
+            exit(1)
+    if not isinstance(instance_ids, list):
+        exit(1)
+
+    # instance_ids = ['i-wz9h6jmb4pp749eaku0r']
     #获取创建出来的instance的ip
     newecs = tools.AliEcsTools(settings.key, settings.secret, settings.region)
     newecs_infos = []
