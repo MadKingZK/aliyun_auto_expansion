@@ -8,14 +8,14 @@ init_cmd = 'bash /root/auto_init.sh'
 check_api = {
     'php-main': {
         'proto': 'http://',
-        'uri': '/tarns/check_api.php',
+        'uri': '/a/b/c',
         'headers': {
             'Content-Type': 'application/json',
             'charset': 'utf-8',
         },
         'data': {
-            "token": "aaaa",
-            "check": True,
+            "token": "",
+            "somedata": ""
         }
     },
 }
@@ -27,11 +27,11 @@ dry_run = True
 ecs_info = {
     'php-main': {
         # 设置参照ECS模板
-        'ecs_model_id': 'o-afefajorrcwsawef',
+        'ecs_model_id': '',
         # 设置默认安全组，在创建ECS时指定添加
-        'default_secrity_group_id': 'ef-fwfefo45g',
+        'default_secrity_group_id': '',
         # 设置次要安全组，在创建ECS完成后指定添加
-        'secondry_secrity_group_ids': ['ger-wefwewef1'],
+        'secondry_secrity_group_ids': [''],
         # 实例类型（cpu与内存）按优先级排序，在前一个创建失败或者指定返回为缺货后尝试下一个，都尝试完如果失败则报错。
         # 'instance_types': ['ecs.sn1.3xlarge'],
         'instance_types': ['ecs.n1.tiny'],
@@ -40,31 +40,31 @@ ecs_info = {
         # 设置初始化脚本
         'init_script': 'php_init.sh',
         #需要添加到的slb服务器组id
-        'slb_vids': ['wefwfwef', 'wefwefwef'],
+        'slb_vids': ['', ''],
         'slb_weight': 45,
     },
-    'go': {
+    'xng-go': {
 
     },
-    'op': {
+    'xng-op': {
 
     },
-    'php': {
+    'xbd-php': {
 
     },
-    'go': {
+    'xbd-go': {
 
     },
-    'op': {
+    'xbd-op': {
 
     },
-    'php': {
+    'wk-php': {
 
     },
-    'w-go': {
+    'wk-go': {
 
     },
-    'w-op': {
+    'wk-op': {
 
     },
 }

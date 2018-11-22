@@ -1,3 +1,4 @@
+# encoding:utf-8
 import tools, settings, os, time, sys
 from collect_param import collect_param
 from create_ecs import AliCreateInstances
@@ -27,12 +28,21 @@ def main():
     instance_ids = AliCreateInstances(ecs_info, arg2).run()
     #获取创建出来的instance的ip
     newecs = tools.AliEcsTools(settings.key, settings.secret, settings.region)
-    newecs_infos = [info for info in newecs.get_instance_info(instance_ids)]
+    newecs_infos = []
+    for infos in newecs.get_instance_info(instance_ids):
+        newecs_infos.extend(infos)
 
-    ips = [info[0].get('InnerIpAddress').get('IpAddress')[0] for info in newecs_infos]
+    ips = [info.get('InnerIpAddress').get('IpAddress')[0] for info in newecs_infos]
     print(instance_ids)
     print(ips)
-    time.sleep(10)
+    time.sleep(20)
+
+    #添加次要安全组
+    for instance_id in instance_ids:
+        for security_group_id in ecs_info.get('secondry_secrity_group_ids'):
+            res = newecs.join_security_group(instance_id, security_group_id)
+            print('成功执行，返回值为：{res}'.format(res=res))
+            print('instance:{instance_id} 已添加次要安全组:{security_group_id} 中'.format(instance_id=instance_id, security_group_id=security_group_id))
     # 执行初始化脚本。
     for ip in ips:
         try:
@@ -58,8 +68,8 @@ def main():
         try:
             if tools.check_api(ip, arg1):
                 for info in newecs_infos:
-                    if ip == info[0].get('InnerIpAddress').get('IpAddress')[0]:
-                        check_instances_ok.append(info[0].get('InstanceId'))
+                    if ip == info.get('InnerIpAddress').get('IpAddress')[0]:
+                        check_instances_ok.append(info.get('InstanceId'))
         except Exception as err:
             print(err)
             print('检查接口时出错！！！')

@@ -5,7 +5,7 @@ import settings
 import requests
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkecs.request.v20140526 import DescribeDisksRequest, DescribeSnapshotsRequest, DescribeImagesRequest, \
-    CreateImageRequest, DescribeInstancesRequest
+    CreateImageRequest, DescribeInstancesRequest, JoinSecurityGroupRequest
 from aliyunsdkslb.request.v20140515 import AddVServerGroupBackendServersRequest
 from pyzabbix import ZabbixAPI
 
@@ -122,6 +122,14 @@ class AliEcsTools(object):
             response = self.client.do_action_with_exception(request)
             response_dict = json.loads(response)
 
+    def join_security_group(self, instance_id, security_group_id):
+        request = JoinSecurityGroupRequest.JoinSecurityGroupRequest()
+        request.set_accept_format('json')
+        request.set_InstanceId(instance_id)
+        request.set_SecurityGroupId(security_group_id)
+        response = self.client.do_action_with_exception(request)
+        response_dict = json.loads(response)
+        return response_dict
 
 class SshTools(object):
     def __init__(self, host):

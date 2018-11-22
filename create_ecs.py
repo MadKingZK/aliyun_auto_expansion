@@ -17,28 +17,27 @@ CHECK_TIMEOUT = 180
 
 '''
 ecs_info数据格式
-ecs_info = {'ecs_model_id': 'i-wewwfajorrcwst5bz',
-            'default_secrity_group_id': 'af-fe4oto45g',
-            'secondry_secrity_group_ids': ['3f-wzfae4aqltf334cs4sz1'],
+ecs_info = {'ecs_model_id': '',
+            'default_secrity_group_id': '',
+            'secondry_secrity_group_ids': [''],
             'instance_types': ['ecs.sn1.3xlarge'],
             'zone_id': 'cn-shenzhen-a',
             'ImageId': 'not have',
             'instance_name': 'php-temp-',
-            #阿里云slb虚拟主机组id
-            'slb_vids': ['aaa', 'bbb', 'ccc', 'ddd'],
+            'slb_vids': ['', '', '', ''],
             'slb_weight': 45,
             'Disks': [
                 {
-                    'DiskId': 'aaaaaaavdwfqtnx7',
+                    'DiskId': '',
                     'Type': 'data',
                     'Size': 120,
-                    'LastSnapId': 'vvvvvvvvvl6mfwv7we'
+                    'LastSnapId': ''
                 },
                 {
-                    'DiskId': 'fawefvxsqwaefawef',
+                    'DiskId': '',
                     'Type': 'system',
                     'Size': 40,
-                    'LastSnapId': 'awef61blvcwefwf'
+                    'LastSnapId': ''
                 }
             ]
             }
