@@ -25,17 +25,18 @@ def main():
     ecs_info = collect_param(arg1)
     arg2 = int(arg2)
 
-    #print(ecs_info)
+    # print(ecs_info)
     instance_types = ecs_info.get('instance_types')
     instance_ids = None
     for instance_type in instance_types:
         ecs_info['instance_type'] = instance_type
         instance_ids = AliCreateInstances(ecs_info, arg2).run()
         if isinstance(instance_ids, int):
+            print(instance_type)
             if instance_ids == 404:
                 print('实例已售空，创建下一个实例类型')
                 continue
-            if instance_ids == 201:
+            elif instance_ids == 201:
                 print('Dry Run 参数检查通过')
                 exit(0)
         elif isinstance(instance_ids, list):
@@ -46,38 +47,42 @@ def main():
     if not isinstance(instance_ids, list):
         exit(1)
 
-    # instance_ids = ['i-wz9h6jmb4pp749eaku0r']
-    #获取创建出来的instance的ip
+    # 获取创建出来的instance的ip
     newecs = tools.AliEcsTools(settings.key, settings.secret, settings.region)
     newecs_infos = []
     for infos in newecs.get_instance_info(instance_ids):
         newecs_infos.extend(infos)
 
-    ips = [info.get('InnerIpAddress').get('IpAddress')[0] for info in newecs_infos]
+    hostinfos = {info.get('InnerIpAddress').get('IpAddress')[0]: info.get('InstanceName') for info
+                 in newecs_infos}
     print(instance_ids)
-    print(ips)
+    print(hostinfos)
     time.sleep(20)
 
-    #添加次要安全组
+    # 添加次要安全组
     for instance_id in instance_ids:
         for security_group_id in ecs_info.get('secondry_secrity_group_ids'):
             res = newecs.join_security_group(instance_id, security_group_id)
             print('成功执行，返回值为：{res}'.format(res=res))
-            print('instance:{instance_id} 已添加次要安全组:{security_group_id} 中'.format(instance_id=instance_id, security_group_id=security_group_id))
+            print('instance:{instance_id} 已添加次要安全组:{security_group_id} 中'.format(instance_id=instance_id,
+                                                                                 security_group_id=security_group_id))
     # 执行初始化脚本。
-    for ip in ips:
+    for ip, hostname in hostinfos.items():
+        print(hostinfos)
         try:
             init_script = ecs_info.get('init_script')
             home_path = os.path.split(os.path.realpath(__file__))[0]
+            os.system('ssh-keygen -f "/root/.ssh/known_hosts" -R {ip}'.format(ip=ip))
             os.system(
-                'scp -o "StrictHostKeyChecking no" {home_path}/{init_script} root@{ip}:/root/auto_init.sh '.format(home_path=home_path,
-                                                                                               init_script=init_script,
-                                                                                               ip=ip))
+                'scp -o "StrictHostKeyChecking no" {home_path}/{init_script} root@{ip}:/root/auto_init.sh'.format(
+                    home_path=home_path,
+                    init_script=init_script,
+                    ip=ip))
             ssh = tools.SshTools(ip)
-            cmd = settings.init_cmd
+            cmd = settings.init_cmd + '  ' + hostname
             status, out, err = ssh.execute_cmd(cmd)
             if status == 0:
-                print('主机{ip}初始化成功'.format(ip=ip))
+                print('主机{hostname} {ip}初始化成功'.format(hostname=hostname, ip=ip))
                 print('输出信息: {out}'.format(out=out))
         except Exception as err:
             print(err)
@@ -85,7 +90,7 @@ def main():
     time.sleep(10)
     # 检查带访问mongo和redis的api，是否可正常返回数据
     check_instances_ok = []
-    for ip in ips:
+    for ip in hostinfos.keys():
         try:
             if tools.check_api(ip, arg1):
                 for info in newecs_infos:
@@ -96,7 +101,7 @@ def main():
             print('检查接口时出错！！！')
     print(check_instances_ok)
 
-    #添加到slb中，阈值在settings中取到
+    # 添加到slb中，阈值在settings中取到
     try:
         weight = ecs_info.get('slb_weight')
         for svid in ecs_info.get('slb_vids'):
@@ -104,10 +109,33 @@ def main():
             ecs.add_to_slb(svid, check_instances_ok, weight)
     except Exception as err:
         print('instance 添加到SLB失败！！！')
-    # 添加到zabbix中
 
-    # 添加到jumpserver中
-
+    print('扩容已完成，开始加入jumpserver中。')
+    # 添加到jumpserver和zabbix中
+    jmp_client = tools.JumpServerClient(settings.jms_url, settings.jms_username, settings.jms_password)
+    jmp_client.login()
+    zbx_client = tools.ZabbixMonitor(settings.zbx_url, settings.zbx_username, settings.zbx_password)
+    zbx_groupids = ecs_info.get('zbx_groupids')
+    zbx_templateids = ecs_info.get('zbx_templateids')
+    for ip, hostname in hostinfos.items():
+        try:
+            jmp_client.create_assets(ip, hostname, '2d6371ba8130404981930831cbb1de1e', ['847af37266f54eb895654af2c047ea7e', 'cb83effd186b4d43bee794c8d5b1150b'])
+            print('{hostname}: {ip}已成功加入jumpserver！！！'.format(hostname=hostname, ip=ip))
+        except Exception as err:
+            print(err)
+            print('{hostname}: {ip}加入jumpserver时出错！！！'.format(hostname=hostname, ip=ip))
+        if zbx_groupids and zbx_templateids:
+            try:
+                zbx_client.add_into_zabbix(hostname, ip, zbx_groupids, zbx_templateids)
+                print('{hostname}: {ip}已成功加入zabbix！！！'.format(hostname=hostname, ip=ip))
+            except Exception as err:
+                print(err)
+                print('{hostname}: {ip}已成功加入zabbix！！！'.format(hostname=hostname, ip=ip))
+        else:
+            print("未加入到zabbix中，未获取到该主机组关于zabbix的配置，请查看配置文件。")
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as err:
+        print(err)

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import json, time
+import requests
+import urllib3
 import paramiko
 import settings
-import requests
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkecs.request.v20140526 import DescribeDisksRequest, DescribeSnapshotsRequest, DescribeImagesRequest, \
     CreateImageRequest, DescribeInstancesRequest, JoinSecurityGroupRequest
 from aliyunsdkslb.request.v20140515 import AddVServerGroupBackendServersRequest
 from pyzabbix import ZabbixAPI
+urllib3.disable_warnings()
 
 
 class AliEcsTools(object):
@@ -32,7 +34,7 @@ class AliEcsTools(object):
         disks_info = response_dic.get('Disks').get('Disk')
         disk_lst = []
         for disk in disks_info:
-            disk_lst.append({'DiskId': disk.get('DiskId'), 'Type': disk.get('Type'), 'Size': disk.get('Size')})
+            disk_lst.append({'DiskId': disk.get('DiskId'), 'Device': disk.get('Device'), 'Type': disk.get('Type'), 'Size': disk.get('Size')})
         return disk_lst
 
     def find_last_snapshot(self, disk_id):
@@ -128,7 +130,6 @@ class AliEcsTools(object):
         # 发起API请求并显示返回值
         response = self.client.do_action_with_exception(request)
         response_dict = json.loads(response)
-        print(response_dict)
 
         # 生成生成器
         while response_dict['Instances']['Instance']:
@@ -202,6 +203,75 @@ class ZbxApiTools(object):
             monitored_hosts=None,
         )
         return hosts
+
+class JumpServerClient(object):
+    def __init__(self, url, user_name, password):
+        self.url = url.rstrip('/')
+        self.user_name = user_name
+        self.passsword = password
+        self.token = None
+        self.header_info = None
+
+    def login(self):
+        query_args = {
+            "username": self.user_name,
+            "password": self.passsword,
+        }
+        url = self.url + "/api/users/v1/auth/"
+        response = requests.post(url, data=query_args, verify=False)
+        res_dic = response.json()
+        self.token = res_dic.get('token')
+        if self.token and isinstance(self.token, str):
+            self.header_info = {"Authorization": 'Bearer ' + self.token}
+        return self.token
+
+    def create_assets(self, ip, hostname, admin_uid, node_lst):
+        url = self.url + "/api/assets/v1/assets/"
+        asset = {
+            'ip': ip,
+            'hostname': hostname,
+            'org_id': None,
+            'admin_user': admin_uid,
+            'nodes': node_lst,
+            'is_active': True,
+        }
+        response = requests.post(url, headers=self.header_info, data=asset, verify=False)
+        return json.loads(response.text)
+
+    def del_assets(self, ip):
+        url = self.url + "/api/assets/v1/assets/"
+        param = { 'ip': ip }
+        response = requests.delete(url, headers=self.header_info, params=param, verify=False)
+        print(response.text)
+
+class ZabbixMonitor(object):
+    def __init__(self, url, user, password):
+        self.prioritytostr = {'0': 'ok', '1': '信息', '2': '警告', '3': '严重'}  # 告警级别
+        self.user = user
+        self.password = password
+        self.url = url
+        self.zapi = ZabbixAPI(self.url)
+        self.zapi.login(self.user, self.password)
+
+    def add_into_zabbix(self, hostname, ip, groupids, templateids):
+        try:
+            self.zapi.host.create(
+                host = ip,
+                name = hostname,
+                groups = groupids,
+                interfaces = [{
+                    "type": 1,
+                    "main": 1,
+                    "useip": 1,
+                    "ip": ip,
+                    "dns": "",
+                    "port": "10050"
+                }],
+                templates = templateids,
+            )
+        except Exception as err:
+            print("{hostname}添加到zabbix失败。".format(hostname=hostname))
+            print(err)
 
 def check_api(host,group_name):
     check_dic = settings.check_api.get(group_name)

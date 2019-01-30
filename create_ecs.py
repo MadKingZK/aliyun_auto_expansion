@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding=utf-8
 import json
 import time
@@ -35,7 +34,7 @@ class AliCreateInstances(object):
         # 实例所属的可用区编号
         self.zone_id = self.ecs_info.get('zone_id')
         # 网络计费类型
-        self.internet_charge_type = 'PayByBandwidth'
+        self.internet_charge_type = self.ecs_info.get('internet_charge_type')
         # 镜像ID
         self.image_id = self.ecs_info.get('ImageId')
         # 指定新创建实例所属于的安全组ID
@@ -47,7 +46,7 @@ class AliCreateInstances(object):
         # 指定创建ECS实例的数量
         self.amount = amount
         # 公网出带宽最大值
-        self.internet_max_bandwidth_out = 1
+        self.internet_max_bandwidth_out = self.ecs_info.get('internet_max_bandwidth_out')
         # 是否为实例名称和主机名添加有序后缀
         self.unique_suffix = True
         # 是否为I/O优化实例
@@ -161,3 +160,6 @@ class AliCreateInstances(object):
 
 if __name__ == '__main__':
     pass
+
+
+
