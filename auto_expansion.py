@@ -11,32 +11,27 @@ from create_ecs import AliCreateInstances
 
 def main():
     parser = argparse.ArgumentParser(description="auto expansion args")
-    parser.add_argument("-p", "--prjName", type=str, required=True, help="需要扩容的项目名称")
+    parser.add_argument(
+        "-p",
+        "--prjName",
+        type=str,
+        choices=settings.ecs_info.keys(),
+        required=True,
+        help="需要扩容的项目名称",
+    )
     parser.add_argument(
         "-n",
         "--amount",
         type=int,
-        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+        choices=[i for i in range(1, 10)],
         required=True,
         help="需要扩容的节点数",
     )
     args = parser.parse_args()
     prjname = args.prjName
     amount = args.amount
-    exit(1)
-    if prjname not in settings.ecs_info.keys():
-        print("wrong arg, needs {keys} ".format(keys=settings.ecs_info.keys()))
-        sys.exit(2)
-    elif not amount.isdigit():
-        print("amount of ecs arg needs digit (1-9)")
-        sys.exit(3)
-    elif int(amount) >= 10:
-        print("amount of ecs arg must in [1-9]")
-        sys.exit(4)
-    ecs_info = collect_param(prjname)
-    amount = int(amount)
 
-    # print(ecs_info)
+    ecs_info = collect_param(prjname)
     instance_types = ecs_info.get("instance_types")
     instance_ids = None
     for instance_type in instance_types:

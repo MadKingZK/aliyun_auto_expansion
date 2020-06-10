@@ -28,7 +28,7 @@ check_api = {
 dry_run = False
 
 ecs_info = {
-    "xng-php-main": {
+    "php-main": {
         # 设置参照ECS模板
         "ecs_model_id": "",
         # 设置默认安全组，在创建ECS时指定添加
@@ -58,12 +58,7 @@ ecs_info = {
         "zbx_groupids": [{"groupid": 19}, {"groupid": 57}],
         "zbx_templateids": [10095, 10453],
     },
-    "xng-go": {},
-    "xng-op": {},
-    "xbd-php": {},
-    "xbd-go": {},
-    "xbd-op": {},
-    "wk-php": {},
-    "wk-go": {},
-    "wk-op": {},
+    "zk-go": {},
+    "zk-op": {},
+    "zk-php": {},
 }
