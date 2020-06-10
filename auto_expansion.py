@@ -11,13 +11,20 @@ from create_ecs import AliCreateInstances
 
 def main():
     parser = argparse.ArgumentParser(description="auto expansion args")
-    parser.add_argument("-p", "--prjName", type=str, help="需要扩容的项目名称")
-    parser.add_argument("-n", "--amount", type=int, help="需要扩容的节点数")
+    parser.add_argument("-p", "--prjName", type=str, required=True, help="需要扩容的项目名称")
+    parser.add_argument(
+        "-n",
+        "--amount",
+        type=int,
+        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+        required=True,
+        help="需要扩容的节点数",
+    )
     args = parser.parse_args()
-    prj_name = args.name
-    amount = args.year
-
-    if prj_name not in settings.ecs_info.keys():
+    prjname = args.prjName
+    amount = args.amount
+    exit(1)
+    if prjname not in settings.ecs_info.keys():
         print("wrong arg, needs {keys} ".format(keys=settings.ecs_info.keys()))
         sys.exit(2)
     elif not amount.isdigit():
@@ -26,7 +33,7 @@ def main():
     elif int(amount) >= 10:
         print("amount of ecs arg must in [1-9]")
         sys.exit(4)
-    ecs_info = collect_param(prj_name)
+    ecs_info = collect_param(prjname)
     amount = int(amount)
 
     # print(ecs_info)
@@ -110,7 +117,7 @@ def main():
     check_instances_ok = []
     for ip in hostinfos.keys():
         try:
-            if tools.check_api(ip, prj_name):
+            if tools.check_api(ip, prjname):
                 for info in newecs_infos:
                     if ip == info.get("InnerIpAddress").get("IpAddress")[0]:
                         check_instances_ok.append(info.get("InstanceId"))
