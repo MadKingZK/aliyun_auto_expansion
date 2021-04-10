@@ -18,7 +18,7 @@ CHECK_TIMEOUT = 180
 
 
 class AliCreateInstances(object):
-    def __init__(self, ecs_info, amount):
+    def __init__(self, ecs_info, amount=1):
         self.ecs_info = ecs_info
         self.access_id = settings.key
         self.access_secret = settings.secret
@@ -82,25 +82,20 @@ class AliCreateInstances(object):
             ids = self.run_instances()
             check_ids = copy.deepcopy(ids)
             self._check_instances_status(check_ids)
-            return ids
+            return ids, 200, None
         except ClientException as e:
-            print(
-                "Fail. Something with your connection with Aliyun go incorrect."
-                " Code: {code}, Message: {msg}".format(code=e.error_code, msg=e.message)
-            )
+            error = "Fail. Something with your connection with Aliyun go incorrect. Code: {code}, Message: {msg}".format(code=e.error_code, msg=e.message)
+            return [], 500, error
         except ServerException as e:
-            print(e)
-            print(
-                "Fail. Business error."
-                " Code: {code}, Message: {msg}".format(code=e.error_code, msg=e.message)
-            )
+            error = "Fail. Business error. Code: {code}, Message: {msg}".format(code=e.error_code, msg=e.message)
             if e.error_code == "OperationDenied.NoStock":
-                return 404
+                return [], 404, error
             elif e.error_code == "DryRunOperation":
-                return 201
+                return [], 201, error
         except Exception:
             print("Unhandled error")
             print(traceback.format_exc())
+            return [], 500, "Unhandled error"
 
     def run_instances(self):
         """
